@@ -1,3 +1,7 @@
+// ==========================================
+// ELEMENTS
+// ==========================================
+
 const expectedInput =
     document.getElementById("expected");
 
@@ -71,25 +75,25 @@ const copyButton =
     document.getElementById("copyButton");
 
 
-/* ==========================================
-   ONLINE AI WORKER
-========================================== */
+// ==========================================
+// CLOUDFLARE WORKER
+// ==========================================
 
 const AI_API_URL =
     "https://ai-mystery-debugger.nobuhledhlamini48.workers.dev/api/debug";
 
 
-/* ==========================================
-   EXAMPLE
-========================================== */
+// ==========================================
+// EXAMPLE PROBLEM
+// ==========================================
 
 const exampleProblem = {
 
     expected:
-        "Clicking the button should display a welcome message.",
+        "Clicking the login button should display a welcome message.",
 
     actual:
-        "Clicking the button produces a ReferenceError.",
+        "Clicking the login button causes a ReferenceError: username is not defined.",
 
     code:
 `function login() {
@@ -105,52 +109,76 @@ document
 };
 
 
-/* ==========================================
-   EVENTS
-========================================== */
+// ==========================================
+// EVENTS
+// ==========================================
 
-debugButton.addEventListener(
-    "click",
-    investigate
-);
+if (debugButton) {
 
-clearButton.addEventListener(
-    "click",
-    clearDebugger
-);
+    debugButton.addEventListener(
+        "click",
+        investigate
+    );
+}
 
-exampleButton.addEventListener(
-    "click",
-    loadExample
-);
 
-emptyExampleButton.addEventListener(
-    "click",
-    loadExample
-);
+if (clearButton) {
 
-copyButton.addEventListener(
-    "click",
-    copyFix
-);
+    clearButton.addEventListener(
+        "click",
+        clearDebugger
+    );
+}
 
-codeInput.addEventListener(
-    "keydown",
-    event => {
 
-        if (
-            event.key === "Enter" &&
-            (event.ctrlKey || event.metaKey)
-        ) {
-            investigate();
+if (exampleButton) {
+
+    exampleButton.addEventListener(
+        "click",
+        loadExample
+    );
+}
+
+
+if (emptyExampleButton) {
+
+    emptyExampleButton.addEventListener(
+        "click",
+        loadExample
+    );
+}
+
+
+if (copyButton) {
+
+    copyButton.addEventListener(
+        "click",
+        copyFix
+    );
+}
+
+
+if (codeInput) {
+
+    codeInput.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                (event.ctrlKey || event.metaKey)
+            ) {
+
+                investigate();
+            }
         }
-    }
-);
+    );
+}
 
 
-/* ==========================================
-   INVESTIGATE
-========================================== */
+// ==========================================
+// INVESTIGATE
+// ==========================================
 
 async function investigate() {
 
@@ -164,7 +192,15 @@ async function investigate() {
         codeInput.value.trim();
 
 
-    if (!expected || !actual || !code) {
+    // ----------------------------------------
+    // VALIDATION
+    // ----------------------------------------
+
+    if (
+        !expected ||
+        !actual ||
+        !code
+    ) {
 
         alert(
             "Please provide the expected behaviour, actual behaviour/error, and code."
@@ -174,9 +210,9 @@ async function investigate() {
     }
 
 
-    /* ======================================
-       Investigation UI
-    ====================================== */
+    // ----------------------------------------
+    // SHOW INVESTIGATION UI
+    // ----------------------------------------
 
     status.textContent =
         "AI investigating...";
@@ -187,6 +223,7 @@ async function investigate() {
 
     investigationSubtitle.textContent =
         "Qwen is analyzing your code...";
+
 
     emptyState.classList.add(
         "hidden"
@@ -206,11 +243,20 @@ async function investigate() {
     solutionElement.textContent =
         "Generating a fix...";
 
+
     confidenceValue.textContent =
         "—";
 
     confidenceFill.style.width =
         "0%";
+
+
+    detectedLanguage.textContent =
+        "Analyzing...";
+
+    languageBadge.textContent =
+        "AI";
+
 
     debugTip.textContent =
         "The AI is examining the code for the root cause.";
@@ -223,11 +269,11 @@ async function investigate() {
         "0.6";
 
 
-    try {
+    // ========================================
+    // SEND REQUEST
+    // ========================================
 
-        /* ==================================
-           SEND REQUEST TO CLOUDFLARE
-        ================================== */
+    try {
 
         const response =
             await fetch(
@@ -242,24 +288,62 @@ async function investigate() {
 
                     body: JSON.stringify({
 
-                        expected,
+                        expected:
+                            expected,
 
-                        actual,
+                        actual:
+                            actual,
 
-                        code
+                        code:
+                            code
 
                     })
                 }
             );
 
 
-        /* ==================================
-           READ RESPONSE
-        ================================== */
+        // ====================================
+        // READ SERVER RESPONSE
+        // ====================================
 
-        const result =
-            await response.json();
+        const responseText =
+            await response.text();
 
+
+        console.log(
+            "RAW CLOUDFLARE RESPONSE:",
+            responseText
+        );
+
+
+        let result;
+
+
+        try {
+
+            result =
+                JSON.parse(
+                    responseText
+                );
+
+        } catch (error) {
+
+            throw new Error(
+                "Cloudflare returned an invalid response: " +
+                responseText.substring(0, 300)
+            );
+        }
+
+
+        console.log(
+            "PARSED CLOUDFLARE RESPONSE:",
+            result
+        );
+
+
+        // ====================================
+        // CHECK HTTP ERROR
+        // ====================================
 
         if (!response.ok) {
 
@@ -270,9 +354,9 @@ async function investigate() {
         }
 
 
-        /* ==================================
-           DISPLAY RESULT
-        ================================== */
+        // ====================================
+        // DISPLAY AI RESULT
+        // ====================================
 
         displayResult(result);
 
@@ -285,6 +369,10 @@ async function investigate() {
         );
 
 
+        // ------------------------------------
+        // ERROR UI
+        // ------------------------------------
+
         causeElement.textContent =
             "Unable to contact the AI.";
 
@@ -294,10 +382,10 @@ async function investigate() {
 
 
         solutionElement.textContent =
-`The online AI service could not be reached.
+`The online AI service could not provide a
+debugging result.
 
-Please check your internet connection and
-try the investigation again.`;
+Please try the investigation again.`;
 
 
         confidenceValue.textContent =
@@ -308,11 +396,23 @@ try the investigation again.`;
             "0%";
 
 
+        detectedLanguage.textContent =
+            "Unknown";
+
+
+        languageBadge.textContent =
+            "ERROR";
+
+
         debugTip.textContent =
-            "The debugger is using the online Cloudflare AI service.";
+            "The debugger is using the Cloudflare Workers AI service.";
 
 
     } finally {
+
+        // ------------------------------------
+        // RESTORE BUTTON
+        // ------------------------------------
 
         debugButton.disabled =
             false;
@@ -336,43 +436,264 @@ try the investigation again.`;
 }
 
 
-/* ==========================================
-   DISPLAY RESULT
-========================================== */
+// ==========================================
+// DISPLAY RESULT
+// ==========================================
 
 function displayResult(result) {
 
-    causeElement.textContent =
-        result.cause ||
-        "No cause provided.";
+    console.log(
+        "DISPLAY RESULT:",
+        result
+    );
 
 
-    evidenceElement.textContent =
-        result.evidence ||
-        "No evidence provided.";
+    // ========================================
+    // ERROR RESPONSE
+    // ========================================
+
+    if (
+        result &&
+        result.error
+    ) {
+
+        causeElement.textContent =
+            "Unable to contact the AI.";
+
+        evidenceElement.textContent =
+            result.error;
+
+        solutionElement.textContent =
+            "Please try the investigation again.";
+
+        confidenceValue.textContent =
+            "0%";
+
+        confidenceFill.style.width =
+            "0%";
+
+        detectedLanguage.textContent =
+            "Unknown";
+
+        languageBadge.textContent =
+            "ERROR";
+
+        debugTip.textContent =
+            "The Cloudflare Worker returned an error.";
+
+        return;
+    }
 
 
-    solutionElement.textContent =
-        result.solution ||
-        "No solution provided.";
+    // ========================================
+    // START WITH RESULT
+    // ========================================
+
+    let aiResult =
+        result;
 
 
-    detectedLanguage.textContent =
-        result.language ||
+    // ========================================
+    // HANDLE:
+    //
+    // {
+    //   response: {
+    //      language: "...",
+    //      cause: "..."
+    //   }
+    // }
+    // ========================================
+
+    if (
+        aiResult &&
+        aiResult.response &&
+        typeof aiResult.response === "object"
+    ) {
+
+        aiResult =
+            aiResult.response;
+    }
+
+
+    // ========================================
+    // HANDLE:
+    //
+    // {
+    //   response: "..."
+    // }
+    // ========================================
+
+    if (
+        aiResult &&
+        typeof aiResult.response === "string"
+    ) {
+
+        const responseText =
+            aiResult.response.trim();
+
+
+        try {
+
+            aiResult =
+                JSON.parse(
+                    responseText
+                );
+
+        } catch (error) {
+
+            /*
+             * Try to find JSON inside
+             * the AI response.
+             */
+
+            const start =
+                responseText.indexOf("{");
+
+            const end =
+                responseText.lastIndexOf("}");
+
+
+            if (
+                start !== -1 &&
+                end !== -1 &&
+                end > start
+            ) {
+
+                try {
+
+                    aiResult =
+                        JSON.parse(
+                            responseText.substring(
+                                start,
+                                end + 1
+                            )
+                        );
+
+                } catch (secondError) {
+
+                    showRawAIResponse(
+                        responseText
+                    );
+
+                    return;
+                }
+
+            } else {
+
+                showRawAIResponse(
+                    responseText
+                );
+
+                return;
+            }
+        }
+    }
+
+
+    // ========================================
+    // HANDLE ANOTHER POSSIBLE NESTED FORMAT
+    // ========================================
+
+    if (
+        aiResult &&
+        aiResult.result &&
+        typeof aiResult.result === "object"
+    ) {
+
+        aiResult =
+            aiResult.result;
+    }
+
+
+    // ========================================
+    // CHECK RESULT
+    // ========================================
+
+    if (
+        !aiResult ||
+        typeof aiResult !== "object"
+    ) {
+
+        showRawAIResponse(
+            String(aiResult)
+        );
+
+        return;
+    }
+
+
+    // ========================================
+    // LANGUAGE
+    // ========================================
+
+    const language =
+        aiResult.language ||
         "Unknown";
 
 
+    detectedLanguage.textContent =
+        language;
+
+
     languageBadge.textContent =
-        (
-            result.language ||
-            "AUTO"
-        ).toUpperCase();
+        String(language)
+            .toUpperCase();
 
 
-    const confidence =
+    // ========================================
+    // CAUSE
+    // ========================================
+
+    causeElement.textContent =
+        aiResult.cause ||
+        "No cause provided.";
+
+
+    // ========================================
+    // EVIDENCE
+    // ========================================
+
+    evidenceElement.textContent =
+        aiResult.evidence ||
+        "No evidence provided.";
+
+
+    // ========================================
+    // SOLUTION
+    // ========================================
+
+    solutionElement.textContent =
+        aiResult.solution ||
+        "No solution provided.";
+
+
+    // ========================================
+    // CONFIDENCE
+    // ========================================
+
+    let confidence =
         Number(
-            result.confidence
-        ) || 0;
+            aiResult.confidence
+        );
+
+
+    if (
+        Number.isNaN(confidence)
+    ) {
+
+        confidence =
+            0;
+    }
+
+
+    confidence =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                confidence
+            )
+        );
 
 
     confidenceValue.textContent =
@@ -387,15 +708,67 @@ function displayResult(result) {
     }, 50);
 
 
+    // ========================================
+    // DEBUG TIP
+    // ========================================
+
     debugTip.textContent =
-        result.tip ||
+        aiResult.tip ||
         "Review the suggested fix carefully.";
 }
 
 
-/* ==========================================
-   CLEAR
-========================================== */
+// ==========================================
+// RAW AI RESPONSE
+// ==========================================
+
+function showRawAIResponse(
+    response
+) {
+
+    console.error(
+        "RAW AI RESPONSE:",
+        response
+    );
+
+
+    causeElement.textContent =
+        "The AI returned an unexpected response.";
+
+
+    evidenceElement.textContent =
+        response ||
+        "The AI returned no readable response.";
+
+
+    solutionElement.textContent =
+        "Please run the investigation again.";
+
+
+    confidenceValue.textContent =
+        "50%";
+
+
+    confidenceFill.style.width =
+        "50%";
+
+
+    detectedLanguage.textContent =
+        "Unknown";
+
+
+    languageBadge.textContent =
+        "UNKNOWN";
+
+
+    debugTip.textContent =
+        "The AI responded, but its response was not in the expected format.";
+}
+
+
+// ==========================================
+// CLEAR
+// ==========================================
 
 function clearDebugger() {
 
@@ -426,21 +799,33 @@ function clearDebugger() {
         "Waiting for evidence...";
 
 
+    detectedLanguage.textContent =
+        "Unknown";
+
+
     languageBadge.textContent =
         "AUTO";
+
+
+    confidenceValue.textContent =
+        "—";
 
 
     confidenceFill.style.width =
         "0%";
 
 
+    debugTip.textContent =
+        "Enter a programming problem to begin.";
+
+
     expectedInput.focus();
 }
 
 
-/* ==========================================
-   LOAD EXAMPLE
-========================================== */
+// ==========================================
+// LOAD EXAMPLE
+// ==========================================
 
 function loadExample() {
 
@@ -457,18 +842,12 @@ function loadExample() {
 
 
     expectedInput.focus();
-
-
-    setTimeout(
-        investigate,
-        150
-    );
 }
 
 
-/* ==========================================
-   COPY FIX
-========================================== */
+// ==========================================
+// COPY FIX
+// ==========================================
 
 async function copyFix() {
 
@@ -476,7 +855,11 @@ async function copyFix() {
         solutionElement.textContent.trim();
 
 
-    if (!text) {
+    if (
+        !text ||
+        text === "No solution provided."
+    ) {
+
         return;
     }
 
@@ -511,6 +894,10 @@ async function copyFix() {
 
 
     } catch (error) {
+
+        // ------------------------------------
+        // FALLBACK COPY METHOD
+        // ------------------------------------
 
         const temporary =
             document.createElement(
