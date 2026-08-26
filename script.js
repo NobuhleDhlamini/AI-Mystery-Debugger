@@ -192,9 +192,9 @@ async function investigate() {
         codeInput.value.trim();
 
 
-    // ----------------------------------------
+    // ========================================
     // VALIDATION
-    // ----------------------------------------
+    // ========================================
 
     if (
         !expected ||
@@ -210,9 +210,9 @@ async function investigate() {
     }
 
 
-    // ----------------------------------------
+    // ========================================
     // SHOW INVESTIGATION UI
-    // ----------------------------------------
+    // ========================================
 
     status.textContent =
         "AI investigating...";
@@ -270,7 +270,7 @@ async function investigate() {
 
 
     // ========================================
-    // SEND REQUEST
+    // SEND REQUEST TO CLOUDFLARE
     // ========================================
 
     try {
@@ -296,14 +296,13 @@ async function investigate() {
 
                         code:
                             code
-
                     })
                 }
             );
 
 
         // ====================================
-        // READ SERVER RESPONSE
+        // READ RESPONSE
         // ====================================
 
         const responseText =
@@ -330,7 +329,10 @@ async function investigate() {
 
             throw new Error(
                 "Cloudflare returned an invalid response: " +
-                responseText.substring(0, 300)
+                responseText.substring(
+                    0,
+                    300
+                )
             );
         }
 
@@ -355,7 +357,7 @@ async function investigate() {
 
 
         // ====================================
-        // DISPLAY AI RESULT
+        // DISPLAY RESULT
         // ====================================
 
         displayResult(result);
@@ -368,10 +370,6 @@ async function investigate() {
             error
         );
 
-
-        // ------------------------------------
-        // ERROR UI
-        // ------------------------------------
 
         causeElement.textContent =
             "Unable to contact the AI.";
@@ -407,12 +405,11 @@ Please try the investigation again.`;
         debugTip.textContent =
             "The debugger is using the Cloudflare Workers AI service.";
 
-
     } finally {
 
-        // ------------------------------------
-        // RESTORE BUTTON
-        // ------------------------------------
+        // ====================================
+        // RESTORE UI
+        // ====================================
 
         debugButton.disabled =
             false;
@@ -494,7 +491,7 @@ function displayResult(result) {
 
 
     // ========================================
-    // HANDLE:
+    // HANDLE NESTED OBJECT
     //
     // {
     //   response: {
@@ -516,7 +513,7 @@ function displayResult(result) {
 
 
     // ========================================
-    // HANDLE:
+    // HANDLE STRING RESPONSE
     //
     // {
     //   response: "..."
@@ -541,10 +538,7 @@ function displayResult(result) {
 
         } catch (error) {
 
-            /*
-             * Try to find JSON inside
-             * the AI response.
-             */
+            // Try to find JSON inside response
 
             const start =
                 responseText.indexOf("{");
@@ -662,9 +656,22 @@ function displayResult(result) {
     // SOLUTION
     // ========================================
 
-    solutionElement.textContent =
-        aiResult.solution ||
-        "No solution provided.";
+   // ========================================
+// SOLUTION
+// ========================================
+
+let solution =
+    aiResult.solution ||
+    "No solution provided.";
+
+// Restore escaped newlines
+solution = solution.replace(/\\n/g, "\n");
+
+// Restore escaped quotes
+solution = solution.replace(/\\"/g, '"');
+
+solutionElement.textContent = solution;
+
 
 
     // ========================================
@@ -715,6 +722,48 @@ function displayResult(result) {
     debugTip.textContent =
         aiResult.tip ||
         "Review the suggested fix carefully.";
+}
+
+
+// ==========================================
+// FORMAT AI SOLUTION
+// ==========================================
+
+function formatSolution(solution) {
+
+    if (!solution) {
+
+        return "No solution provided.";
+    }
+
+
+    let text =
+        String(solution).trim();
+
+
+    // ----------------------------------------
+    // Remove opening Markdown code fence
+    // ----------------------------------------
+
+    text =
+        text.replace(
+            /^```[a-zA-Z0-9+#.-]*\s*/i,
+            ""
+        );
+
+
+    // ----------------------------------------
+    // Remove closing Markdown code fence
+    // ----------------------------------------
+
+    text =
+        text.replace(
+            /\s*```$/i,
+            ""
+        );
+
+
+    return text.trim();
 }
 
 
@@ -895,9 +944,9 @@ async function copyFix() {
 
     } catch (error) {
 
-        // ------------------------------------
-        // FALLBACK COPY METHOD
-        // ------------------------------------
+        // ====================================
+        // FALLBACK COPY
+        // ====================================
 
         const temporary =
             document.createElement(

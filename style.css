@@ -2701,3 +2701,54 @@ footer {
             column;
     }
 }
+/* Suggested Fix */
+#solution {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 20px;
+
+    background: #0d1117;
+    color: #e6edf3;
+
+    border: 1px solid #30363d;
+    border-radius: 12px;
+
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.7;
+
+    white-space: pre-wrap;
+    overflow-x: auto;
+    tab-size: 4;
+}
+
+/* Solution header */
+.solution-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+/* Copy button */
+.copy-button {
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.copy-button:hover {
+    transform: translateY(-1px);
+}
+
+.copy-button.copied {
+    background: #22c55e;
+    color: white;
+}
+#cause {
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 500;
+}

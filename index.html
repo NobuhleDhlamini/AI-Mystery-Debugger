@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <meta
         name="description"
-        content="AI Mystery Debugger - an intelligent browser-based programming error analyzer."
+        content="AI Mystery Debugger - an intelligent browser-based programming error analyzer powered by Cloudflare Workers AI."
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b1020"
     >
 
     <title>AI Mystery Debugger</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body>
 
 <div class="app">
+
 
     <!-- =====================================================
          HEADER
@@ -26,9 +43,16 @@
 
         <div class="logo">
 
-            <span class="logo-icon">⌕</span>
+            <span
+                class="logo-icon"
+                aria-hidden="true"
+            >
+                ⌕
+            </span>
 
-            <span>AI Mystery Debugger</span>
+            <span>
+                AI Mystery Debugger
+            </span>
 
         </div>
 
@@ -44,9 +68,15 @@
             </button>
 
 
-            <div class="status">
+            <div
+                class="status"
+                aria-label="AI status"
+            >
 
-                <span class="status-dot"></span>
+                <span
+                    class="status-dot"
+                    aria-hidden="true"
+                ></span>
 
                 AI Ready
 
@@ -63,18 +93,22 @@
 
     <main>
 
+
         <!-- =================================================
              HERO
         ================================================== -->
 
-        <section class="hero">
+        <section
+            class="hero"
+            aria-labelledby="hero-title"
+        >
 
             <div class="eyebrow">
                 FORENSIC CODE INVESTIGATION
             </div>
 
 
-            <h1>
+            <h1 id="hero-title">
 
                 Turn coding problems
                 <br>
@@ -93,15 +127,16 @@
             </p>
 
 
-            <div class="hero-features">
+    <div class="hero-features">
 
-                <span>✓ No login</span>
+    <span>✓ No login</span>
 
-                <span>✓ No API key</span>
+    <span>✓ No API key</span>
 
-                <span>✓ Runs in your browser</span>
+    <span>✓ Powered by Cloudflare AI</span>
 
-            </div>
+</div>
+
 
         </section>
 
@@ -110,7 +145,10 @@
              DEBUGGER
         ================================================== -->
 
-        <section class="debugger">
+        <section
+            class="debugger"
+            aria-label="AI Debugger"
+        >
 
 
             <!-- =============================================
@@ -154,6 +192,8 @@
 
                 <textarea
                     id="expected"
+                    rows="4"
+                    autocomplete="off"
                     placeholder="Example: Clicking the login button should display a welcome message."
                 ></textarea>
 
@@ -167,6 +207,8 @@
 
                 <textarea
                     id="actual"
+                    rows="4"
+                    autocomplete="off"
                     placeholder="Example: Clicking the button causes a ReferenceError: username is not defined."
                 ></textarea>
 
@@ -180,7 +222,10 @@
                     </label>
 
 
-                    <span id="languageBadge">
+                    <span
+                        id="languageBadge"
+                        aria-label="Detected programming language"
+                    >
                         AUTO
                     </span>
 
@@ -190,7 +235,10 @@
                 <textarea
                     id="code"
                     class="code-input"
+                    rows="14"
                     spellcheck="false"
+                    autocomplete="off"
+                    autocapitalize="off"
                     placeholder="Paste the relevant code here..."
                 ></textarea>
 
@@ -209,7 +257,10 @@
                             Investigate Mystery
                         </span>
 
-                        <span class="button-arrow">
+                        <span
+                            class="button-arrow"
+                            aria-hidden="true"
+                        >
                             →
                         </span>
 
@@ -225,6 +276,11 @@
                     </button>
 
                 </div>
+
+
+                <p class="keyboard-hint">
+                    Tip: Press Ctrl + Enter to investigate.
+                </p>
 
             </div>
 
@@ -279,8 +335,13 @@
                     class="empty-state"
                 >
 
-                    <div class="detective-icon">
-                        <span>⌕</span>
+                    <div
+                        class="detective-icon"
+                        aria-hidden="true"
+                    >
+                        <span>
+                            ⌕
+                        </span>
                     </div>
 
 
@@ -313,7 +374,10 @@
                 <div
                     id="resultContent"
                     class="result-content hidden"
+                    aria-live="polite"
                 >
+
+                    <!-- RESULT HEADER -->
 
                     <div class="result-top">
 
@@ -326,7 +390,7 @@
                             id="detectedLanguage"
                             class="detected-language"
                         >
-                            JavaScript
+                            Unknown
                         </span>
 
                     </div>
@@ -382,9 +446,17 @@
                         </div>
 
 
-                        <div class="confidence-bar">
+                        <div
+                            class="confidence-bar"
+                            role="progressbar"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="0"
+                        >
 
-                            <div id="confidenceFill"></div>
+                            <div
+                                id="confidenceFill"
+                            ></div>
 
                         </div>
 
@@ -413,7 +485,10 @@
                         </div>
 
 
-                        <pre id="solution"></pre>
+                        <pre
+                            id="solution"
+                            tabindex="0"
+                        ></pre>
 
                     </div>
 
@@ -422,7 +497,10 @@
 
                     <div class="tips-box">
 
-                        <span class="tips-icon">
+                        <span
+                            class="tips-icon"
+                            aria-hidden="true"
+                        >
                             💡
                         </span>
 
@@ -450,11 +528,16 @@
 
 
         <!-- =================================================
-             PORTFOLIO INFO
+             FEATURES
         ================================================== -->
 
-        <section class="portfolio-section">
+        <section
+            class="portfolio-section"
+            aria-label="Debugger features"
+        >
 
+
+            <!-- FEATURE 1 -->
 
             <div class="portfolio-card">
 
@@ -466,19 +549,22 @@
                 <div>
 
                     <h3>
-                        Pattern-based analysis
+                        AI-powered analysis
                     </h3>
 
 
                     <p>
-                        Recognizes common programming errors
-                        and maps them to practical solutions.
+                        Analyzes your expected behaviour,
+                        actual error, and source code to identify
+                        the most likely root cause.
                     </p>
 
                 </div>
 
             </div>
 
+
+            <!-- FEATURE 2 -->
 
             <div class="portfolio-card">
 
@@ -495,14 +581,17 @@
 
 
                     <p>
-                        JavaScript, Python, HTML, CSS, SQL,
-                        Java, C/C++ and React patterns are supported.
+                        Analyze JavaScript, Python, C++, Java,
+                        HTML, CSS, SQL and other programming
+                        languages.
                     </p>
 
                 </div>
 
             </div>
 
+
+            <!-- FEATURE 3 -->
 
             <div class="portfolio-card">
 
@@ -514,13 +603,14 @@
                 <div>
 
                     <h3>
-                        Zero configuration
+                        Simple and accessible
                     </h3>
 
 
                     <p>
-                        Everything runs directly in the browser
-                        without authentication or an external API.
+                        No account or API key is required.
+                        Submit a problem directly from your
+                        browser and receive an AI-generated analysis.
                     </p>
 
                 </div>
@@ -528,6 +618,7 @@
             </div>
 
         </section>
+
 
     </main>
 
@@ -544,15 +635,24 @@
 
 
         <span>
-            Built with HTML • CSS • JavaScript
+            Built with HTML • CSS • JavaScript • Cloudflare Workers AI
         </span>
 
     </footer>
 
+
 </div>
 
 
-<script src="script.js"></script>
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
+<script
+    src="script.js"
+    defer
+></script>
 
 </body>
+
 </html>
