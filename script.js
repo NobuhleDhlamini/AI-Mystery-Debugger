@@ -72,6 +72,14 @@ const copyButton =
 
 
 /* ==========================================
+   ONLINE AI WORKER
+========================================== */
+
+const AI_API_URL =
+    "https://ai-mystery-debugger.nobuhledhlamini48.workers.dev/api/debug";
+
+
+/* ==========================================
    EXAMPLE
 ========================================== */
 
@@ -166,7 +174,9 @@ async function investigate() {
     }
 
 
-    /* Investigation UI */
+    /* ======================================
+       Investigation UI
+    ====================================== */
 
     status.textContent =
         "AI investigating...";
@@ -206,7 +216,8 @@ async function investigate() {
         "The AI is examining the code for the root cause.";
 
 
-    debugButton.disabled = true;
+    debugButton.disabled =
+        true;
 
     debugButton.style.opacity =
         "0.6";
@@ -214,9 +225,13 @@ async function investigate() {
 
     try {
 
+        /* ==================================
+           SEND REQUEST TO CLOUDFLARE
+        ================================== */
+
         const response =
             await fetch(
-                "/api/debug",
+                AI_API_URL,
                 {
                     method: "POST",
 
@@ -232,10 +247,15 @@ async function investigate() {
                         actual,
 
                         code
+
                     })
                 }
             );
 
+
+        /* ==================================
+           READ RESPONSE
+        ================================== */
 
         const result =
             await response.json();
@@ -245,38 +265,52 @@ async function investigate() {
 
             throw new Error(
                 result.error ||
-                "The AI server returned an error."
+                "The online AI server returned an error."
             );
         }
 
+
+        /* ==================================
+           DISPLAY RESULT
+        ================================== */
 
         displayResult(result);
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "AI investigation error:",
+            error
+        );
+
 
         causeElement.textContent =
             "Unable to contact the AI.";
 
+
         evidenceElement.textContent =
             error.message;
 
-        solutionElement.textContent =
-`Make sure Ollama is running and that the
-Qwen2.5-Coder model is installed.
 
-Then try again.`;
+        solutionElement.textContent =
+`The online AI service could not be reached.
+
+Please check your internet connection and
+try the investigation again.`;
+
 
         confidenceValue.textContent =
             "0%";
 
+
         confidenceFill.style.width =
             "0%";
 
+
         debugTip.textContent =
-            "Check the terminal where your AI server is running.";
+            "The debugger is using the online Cloudflare AI service.";
+
 
     } finally {
 
@@ -286,12 +320,15 @@ Then try again.`;
         debugButton.style.opacity =
             "1";
 
+
         status.textContent =
             "Investigation complete";
+
 
         status.classList.remove(
             "investigating"
         );
+
 
         investigationSubtitle.textContent =
             "Evidence analyzed by AI.";
@@ -309,17 +346,21 @@ function displayResult(result) {
         result.cause ||
         "No cause provided.";
 
+
     evidenceElement.textContent =
         result.evidence ||
         "No evidence provided.";
+
 
     solutionElement.textContent =
         result.solution ||
         "No solution provided.";
 
+
     detectedLanguage.textContent =
         result.language ||
         "Unknown";
+
 
     languageBadge.textContent =
         (
@@ -358,11 +399,14 @@ function displayResult(result) {
 
 function clearDebugger() {
 
-    expectedInput.value = "";
+    expectedInput.value =
+        "";
 
-    actualInput.value = "";
+    actualInput.value =
+        "";
 
-    codeInput.value = "";
+    codeInput.value =
+        "";
 
 
     emptyState.classList.remove(
@@ -376,6 +420,7 @@ function clearDebugger() {
 
     status.textContent =
         "Waiting...";
+
 
     investigationSubtitle.textContent =
         "Waiting for evidence...";
@@ -402,8 +447,10 @@ function loadExample() {
     expectedInput.value =
         exampleProblem.expected;
 
+
     actualInput.value =
         exampleProblem.actual;
+
 
     codeInput.value =
         exampleProblem.code;
@@ -440,8 +487,10 @@ async function copyFix() {
             text
         );
 
+
         copyButton.textContent =
             "Copied!";
+
 
         copyButton.classList.add(
             "copied"
@@ -452,6 +501,7 @@ async function copyFix() {
 
             copyButton.textContent =
                 "Copy Fix";
+
 
             copyButton.classList.remove(
                 "copied"
@@ -467,20 +517,26 @@ async function copyFix() {
                 "textarea"
             );
 
+
         temporary.value =
             text;
+
 
         document.body.appendChild(
             temporary
         );
 
+
         temporary.select();
+
 
         document.execCommand(
             "copy"
         );
 
+
         temporary.remove();
+
 
         copyButton.textContent =
             "Copied!";
