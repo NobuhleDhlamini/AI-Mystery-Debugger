@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="AI Mystery Debugger - an intelligent browser-based programming error analyzer."
+    >
+
+    <title>AI Mystery Debugger</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div class="logo">
+
+            <span class="logo-icon">⌕</span>
+
+            <span>AI Mystery Debugger</span>
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                id="exampleButton"
+                class="example-button"
+                type="button"
+            >
+                Try Example
+            </button>
+
+
+            <div class="status">
+
+                <span class="status-dot"></span>
+
+                AI Ready
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main>
+
+        <!-- =================================================
+             HERO
+        ================================================== -->
+
+        <section class="hero">
+
+            <div class="eyebrow">
+                FORENSIC CODE INVESTIGATION
+            </div>
+
+
+            <h1>
+
+                Turn coding problems
+                <br>
+
+                into <span>clear solutions.</span>
+
+            </h1>
+
+
+            <p>
+
+                Describe what went wrong, paste your code,
+                and let Mystery Debugger investigate the problem
+                and suggest a fix.
+
+            </p>
+
+
+            <div class="hero-features">
+
+                <span>✓ No login</span>
+
+                <span>✓ No API key</span>
+
+                <span>✓ Runs in your browser</span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             DEBUGGER
+        ================================================== -->
+
+        <section class="debugger">
+
+
+            <!-- =============================================
+                 INPUT PANEL
+            ============================================== -->
+
+            <div class="input-panel">
+
+                <div class="panel-heading">
+
+                    <div class="heading-left">
+
+                        <span class="step">
+                            01
+                        </span>
+
+
+                        <div>
+
+                            <h2>
+                                Describe the problem
+                            </h2>
+
+                            <p>
+                                Give the investigator some clues.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- EXPECTED -->
+
+                <label for="expected">
+                    What did you expect to happen?
+                </label>
+
+
+                <textarea
+                    id="expected"
+                    placeholder="Example: Clicking the login button should display a welcome message."
+                ></textarea>
+
+
+                <!-- ACTUAL -->
+
+                <label for="actual">
+                    What actually happened?
+                </label>
+
+
+                <textarea
+                    id="actual"
+                    placeholder="Example: Clicking the button causes a ReferenceError: username is not defined."
+                ></textarea>
+
+
+                <!-- CODE -->
+
+                <div class="code-label-row">
+
+                    <label for="code">
+                        Paste your code
+                    </label>
+
+
+                    <span id="languageBadge">
+                        AUTO
+                    </span>
+
+                </div>
+
+
+                <textarea
+                    id="code"
+                    class="code-input"
+                    spellcheck="false"
+                    placeholder="Paste the relevant code here..."
+                ></textarea>
+
+
+                <!-- ACTIONS -->
+
+                <div class="button-row">
+
+                    <button
+                        id="debugButton"
+                        class="debug-button"
+                        type="button"
+                    >
+
+                        <span>
+                            Investigate Mystery
+                        </span>
+
+                        <span class="button-arrow">
+                            →
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        id="clearButton"
+                        class="clear-button"
+                        type="button"
+                    >
+                        Clear
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 RESULT PANEL
+            ============================================== -->
+
+            <div class="result-panel">
+
+                <div class="panel-heading">
+
+                    <div class="heading-left">
+
+                        <span class="step">
+                            02
+                        </span>
+
+
+                        <div>
+
+                            <h2>
+                                Investigation
+                            </h2>
+
+
+                            <p id="investigationSubtitle">
+                                Waiting for evidence...
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <span
+                        id="investigationStatus"
+                        class="waiting-status"
+                    >
+                        Waiting...
+                    </span>
+
+                </div>
+
+
+                <!-- =========================================
+                     EMPTY STATE
+                ========================================== -->
+
+                <div
+                    id="emptyState"
+                    class="empty-state"
+                >
+
+                    <div class="detective-icon">
+                        <span>⌕</span>
+                    </div>
+
+
+                    <h3>
+                        No mystery investigated yet
+                    </h3>
+
+
+                    <p>
+                        Enter your problem on the left
+                        and start an investigation.
+                    </p>
+
+
+                    <button
+                        id="emptyExampleButton"
+                        class="small-example-button"
+                        type="button"
+                    >
+                        Load an example
+                    </button>
+
+                </div>
+
+
+                <!-- =========================================
+                     RESULT
+                ========================================== -->
+
+                <div
+                    id="resultContent"
+                    class="result-content hidden"
+                >
+
+                    <div class="result-top">
+
+                        <div class="result-badge">
+                            ✓ INVESTIGATION COMPLETE
+                        </div>
+
+
+                        <span
+                            id="detectedLanguage"
+                            class="detected-language"
+                        >
+                            JavaScript
+                        </span>
+
+                    </div>
+
+
+                    <!-- CAUSE -->
+
+                    <div class="result-section">
+
+                        <span class="result-label">
+                            MOST LIKELY CAUSE
+                        </span>
+
+
+                        <h3 id="cause">
+                            -
+                        </h3>
+
+                    </div>
+
+
+                    <!-- EVIDENCE -->
+
+                    <div class="result-section">
+
+                        <span class="result-label">
+                            EVIDENCE
+                        </span>
+
+
+                        <p id="evidence">
+                            -
+                        </p>
+
+                    </div>
+
+
+                    <!-- CONFIDENCE -->
+
+                    <div class="confidence">
+
+                        <div class="confidence-header">
+
+                            <span class="result-label">
+                                CONFIDENCE
+                            </span>
+
+
+                            <strong id="confidenceValue">
+                                0%
+                            </strong>
+
+                        </div>
+
+
+                        <div class="confidence-bar">
+
+                            <div id="confidenceFill"></div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FIX -->
+
+                    <div class="result-section solution">
+
+                        <div class="solution-header">
+
+                            <span class="result-label">
+                                SUGGESTED FIX
+                            </span>
+
+
+                            <button
+                                id="copyButton"
+                                class="copy-button"
+                                type="button"
+                            >
+                                Copy Fix
+                            </button>
+
+                        </div>
+
+
+                        <pre id="solution"></pre>
+
+                    </div>
+
+
+                    <!-- TIP -->
+
+                    <div class="tips-box">
+
+                        <span class="tips-icon">
+                            💡
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                Debugger tip
+                            </strong>
+
+
+                            <p id="debugTip">
+                                Check the exact line mentioned by the error.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PORTFOLIO INFO
+        ================================================== -->
+
+        <section class="portfolio-section">
+
+
+            <div class="portfolio-card">
+
+                <span class="portfolio-number">
+                    01
+                </span>
+
+
+                <div>
+
+                    <h3>
+                        Pattern-based analysis
+                    </h3>
+
+
+                    <p>
+                        Recognizes common programming errors
+                        and maps them to practical solutions.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="portfolio-card">
+
+                <span class="portfolio-number">
+                    02
+                </span>
+
+
+                <div>
+
+                    <h3>
+                        Multiple languages
+                    </h3>
+
+
+                    <p>
+                        JavaScript, Python, HTML, CSS, SQL,
+                        Java, C/C++ and React patterns are supported.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="portfolio-card">
+
+                <span class="portfolio-number">
+                    03
+                </span>
+
+
+                <div>
+
+                    <h3>
+                        Zero configuration
+                    </h3>
+
+
+                    <p>
+                        Everything runs directly in the browser
+                        without authentication or an external API.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        <span>
+            AI Mystery Debugger
+        </span>
+
+
+        <span>
+            Built with HTML • CSS • JavaScript
+        </span>
+
+    </footer>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
