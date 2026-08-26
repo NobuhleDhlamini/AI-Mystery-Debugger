@@ -20,75 +20,45 @@ export default {
       request.method !== "POST" ||
       url.pathname !== "/api/debug"
     ) {
-      return new Response(
-        JSON.stringify({
-          error: "Not Found"
-        }),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        }
-      );
+      return new Response("Not Found", {
+        status: 404,
+        headers: corsHeaders
+      });
     }
 
     try {
 
       const data = await request.json();
 
-      const expected = data.expected || "";
-      const actual = data.actual || "";
-      const code = data.code || "";
-
       const prompt = `
-You are an expert programming debugger.
+You are a programming debugger.
 
-Analyze this programming problem.
+Expected:
+${data.expected || ""}
 
-EXPECTED:
-${expected}
+Actual:
+${data.actual || ""}
 
-ACTUAL:
-${actual}
+Code:
+${data.code || ""}
 
-CODE:
-${code}
-
-Explain the actual bug clearly.
+Explain what the programming bug is.
 `;
 
-      const aiResult = await env.AI.run(
+      const result = await env.AI.run(
         "@cf/qwen/qwen2.5-coder-32b-instruct",
         {
           messages: [
             {
-              role: "system",
-              content:
-                "You are an expert programming debugger."
-            },
-            {
               role: "user",
               content: prompt
             }
-          ],
-
-          stream: false,
-
-          max_tokens: 1000,
-
-          temperature: 0.1
+          ]
         }
       );
 
-      // TEMPORARY DIAGNOSTIC RESPONSE
       return new Response(
-        JSON.stringify({
-          success: true,
-          type: typeof aiResult,
-          aiResult: aiResult
-        }),
+        JSON.stringify(result),
         {
           status: 200,
           headers: {
@@ -102,9 +72,7 @@ Explain the actual bug clearly.
 
       return new Response(
         JSON.stringify({
-          success: false,
-          error: error.message,
-          stack: error.stack
+          error: error.message
         }),
         {
           status: 500,
