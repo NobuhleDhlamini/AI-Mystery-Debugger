@@ -1,24 +1,31 @@
 export default {
   async fetch(request, env) {
-    // Handle CORS
+
+    // CORS
     if (request.method === "OPTIONS") {
       return new Response(null, {
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
       });
     }
 
-    // Only accept POST requests to /api/debug
     const url = new URL(request.url);
 
-    if (request.method !== "POST" || url.pathname !== "/api/debug") {
-      return new Response("Not Found", { status: 404 });
+    // Only /api/debug
+    if (
+      request.method !== "POST" ||
+      url.pathname !== "/api/debug"
+    ) {
+      return new Response("Not Found", {
+        status: 404
+      });
     }
 
     try {
+
       const data = await request.json();
 
       const expected = data.expected || "";
@@ -30,75 +37,111 @@ You are an expert programming debugger.
 
 Analyze the user's code carefully.
 
-Your job is to:
-1. Identify the actual bug.
-2. Explain why it happens.
-3. Provide corrected code.
-4. Explain what changed.
-5. Give useful debugging advice.
-6. Do not invent an error that isn't present.
-7. Do not assume the programming language incorrectly.
+Identify the actual programming bug.
 
-User's expected behaviour:
+Expected behaviour:
 ${expected}
 
-User's actual behaviour/error:
+Actual behaviour:
 ${actual}
 
-User's code:
+Code:
 \`\`\`
 ${code}
 \`\`\`
 
-Return ONLY valid JSON with exactly these fields:
+Return ONLY valid JSON.
+
+Use exactly this structure:
 
 {
   "language": "programming language",
   "cause": "short explanation of the main problem",
-  "evidence": "why you believe this is the problem",
+  "evidence": "why this is the problem",
   "solution": "complete corrected code",
   "confidence": 0,
   "tip": "useful debugging advice"
 }
 
-The confidence must be a number from 0 to 100.
+The confidence must be a number between 0 and 100.
 `;
 
-      const response = await env.AI.run(
+      const aiResponse = await env.AI.run(
         "@cf/qwen/qwen2.5-coder-32b-instruct",
         {
           messages: [
             {
-              role: "user",
-              content: prompt,
+              role: "system",
+              content:
+                "You are an expert programming debugger. Return only valid JSON."
             },
+            {
+              role: "user",
+              content: prompt
+            }
           ],
+          max_tokens: 1500,
+          temperature: 0.2
         }
       );
 
+      // Workers AI returns the generated text in "response"
+      const aiText = aiResponse.response;
+
+      let result;
+
+      try {
+
+        result = JSON.parse(aiText);
+
+      } catch (parseError) {
+
+        result = {
+          language: "Unknown",
+
+          cause:
+            "The AI returned an invalid JSON response.",
+
+          evidence:
+            aiText || "No AI response was received.",
+
+          solution:
+            "Please run the investigation again.",
+
+          confidence: 50,
+
+          tip:
+            "The AI responded, but its response could not be converted into the required format."
+        };
+      }
+
       return new Response(
-        JSON.stringify(response),
+        JSON.stringify(result),
         {
+          status: 200,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
+            "Access-Control-Allow-Origin": "*"
+          }
         }
       );
 
     } catch (error) {
+
+      console.error(error);
+
       return new Response(
         JSON.stringify({
-          error: error.message,
+          error: error.message
         }),
         {
           status: 500,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
+            "Access-Control-Allow-Origin": "*"
+          }
         }
       );
     }
-  },
+  }
 };
