@@ -5,28 +5,25 @@ export default {
     // CORS
     // ==========================================
 
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
+        headers: corsHeaders
       });
     }
 
 
     // ==========================================
-    // REQUEST URL
+    // CHECK URL
     // ==========================================
 
     const url = new URL(request.url);
-
-
-    // ==========================================
-    // DEBUG ENDPOINT
-    // ==========================================
 
     if (
       request.method !== "POST" ||
@@ -39,8 +36,8 @@ export default {
         {
           status: 404,
           headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
+            ...corsHeaders,
+            "Content-Type": "application/json"
           }
         }
       );
@@ -48,189 +45,156 @@ export default {
 
 
     // ==========================================
-    // MAIN AI REQUEST
+    // MAIN
     // ==========================================
 
     try {
 
       const data = await request.json();
 
-
-      const expected =
-        data.expected || "";
-
-      const actual =
-        data.actual || "";
-
-      const code =
-        data.code || "";
+      const expected = data.expected || "";
+      const actual = data.actual || "";
+      const code = data.code || "";
 
 
       // ========================================
-      // AI PROMPT
+      // PROMPT
       // ========================================
 
       const prompt = `
 You are an expert programming debugger.
 
-Analyze the user's programming problem carefully.
-
-Your job is to:
-
-1. Identify the actual bug.
-2. Explain why the bug happens.
-3. Provide corrected code.
-4. Explain the evidence from the user's code.
-5. Give useful debugging advice.
-6. Do not invent errors that are not present.
-7. Identify the programming language correctly.
+Analyze the programming problem below.
 
 EXPECTED BEHAVIOUR:
 ${expected}
 
-ACTUAL BEHAVIOUR / ERROR:
+ACTUAL BEHAVIOUR:
 ${actual}
 
 USER CODE:
-\`\`\`
 ${code}
-\`\`\`
 
-Return ONLY a valid JSON object.
+Return ONLY a JSON object.
 
-The JSON must have exactly these fields:
+The JSON must contain these exact fields:
 
 {
   "language": "programming language",
-  "cause": "short explanation of the main problem",
-  "evidence": "specific evidence from the user's code",
+  "cause": "short explanation of the main bug",
+  "evidence": "specific evidence from the code",
   "solution": "complete corrected code",
-  "confidence": 0,
+  "confidence": 95,
   "tip": "useful debugging advice"
 }
 
-The confidence must be a number between 0 and 100.
+Rules:
 
-Do NOT use Markdown.
-Do NOT use code fences around the JSON.
-Return ONLY the JSON object.
+- language must identify the programming language.
+- cause must explain the actual bug.
+- evidence must refer to the provided code.
+- solution must contain the corrected code.
+- confidence must be a number from 0 to 100.
+- tip must provide useful advice.
+- Return ONLY JSON.
+- Do not use Markdown.
+- Do not use code fences.
 `;
 
 
       // ========================================
-      // CALL CLOUDFLARE WORKERS AI
+      // CALL QWEN
       // ========================================
 
-      const aiResponse =
-        await env.AI.run(
-          "@cf/qwen/qwen2.5-coder-32b-instruct",
-          {
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are an expert programming debugger. Return only valid JSON."
-              },
-              {
-                role: "user",
-                content: prompt
-              }
-            ],
+      const aiResult = await env.AI.run(
+        "@cf/qwen/qwen2.5-coder-32b-instruct",
+        {
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a programming debugger. Return ONLY valid JSON."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
 
-            stream: false,
+          stream: false,
 
-            max_tokens: 2000,
+          max_tokens: 2000,
 
-            temperature: 0.1
-          }
-        );
+          temperature: 0.1
+        }
+      );
 
 
       // ========================================
-      // EXTRACT AI TEXT
+      // DEBUG AI RESPONSE
+      // ========================================
+
+      console.log(
+        "Workers AI result:",
+        JSON.stringify(aiResult)
+      );
+
+
+      // ========================================
+      // GET RESPONSE TEXT
       // ========================================
 
       let aiText = "";
 
 
       if (
-        typeof aiResponse === "string"
+        aiResult &&
+        typeof aiResult.response === "string"
       ) {
 
         aiText =
-          aiResponse;
+          aiResult.response;
 
       } else if (
-        aiResponse &&
-        typeof aiResponse.response === "string"
+        typeof aiResult === "string"
       ) {
 
         aiText =
-          aiResponse.response;
+          aiResult;
 
       } else {
 
-        /*
-         * Some Workers AI responses can contain
-         * the generated result in another object.
-         */
-
-        if (
-          aiResponse &&
-          typeof aiResponse === "object"
-        ) {
-
-          aiText =
-            JSON.stringify(aiResponse);
-
-        } else {
-
-          aiText =
-            String(aiResponse);
-        }
+        throw new Error(
+          "Workers AI returned an unexpected response."
+        );
       }
 
-
-      // ========================================
-      // CLEAN AI RESPONSE
-      // ========================================
 
       aiText =
         aiText.trim();
 
 
-      /*
-       * Remove Markdown code fences if Qwen
-       * accidentally returns them.
-       */
+      // ========================================
+      // REMOVE MARKDOWN FENCES
+      // ========================================
 
-      if (
-        aiText.startsWith("```json")
-      ) {
+      aiText =
+        aiText.replace(
+          /^```json\s*/i,
+          ""
+        );
 
-        aiText =
-          aiText.substring(7);
+      aiText =
+        aiText.replace(
+          /^```\s*/i,
+          ""
+        );
 
-      } else if (
-        aiText.startsWith("```")
-      ) {
-
-        aiText =
-          aiText.substring(3);
-      }
-
-
-      if (
-        aiText.endsWith("```")
-      ) {
-
-        aiText =
-          aiText.substring(
-            0,
-            aiText.length - 3
-          );
-      }
-
+      aiText =
+        aiText.replace(
+          /\s*```$/i,
+          ""
+        );
 
       aiText =
         aiText.trim();
@@ -240,7 +204,7 @@ Return ONLY the JSON object.
       // PARSE JSON
       // ========================================
 
-      let result = null;
+      let result;
 
 
       try {
@@ -248,46 +212,55 @@ Return ONLY the JSON object.
         result =
           JSON.parse(aiText);
 
-      } catch (parseError) {
+      } catch (error) {
 
-        /*
-         * Sometimes the AI adds text before or
-         * after the JSON. Try extracting the
-         * JSON object.
-         */
+        console.log(
+          "JSON parsing failed."
+        );
 
-        const firstBrace =
+        console.log(
+          "AI text:",
+          aiText
+        );
+
+
+        // Try extracting JSON object
+
+        const start =
           aiText.indexOf("{");
 
-        const lastBrace =
+        const end =
           aiText.lastIndexOf("}");
 
 
         if (
-          firstBrace !== -1 &&
-          lastBrace !== -1 &&
-          lastBrace > firstBrace
+          start !== -1 &&
+          end !== -1 &&
+          end > start
         ) {
 
-          const possibleJson =
+          const extracted =
             aiText.substring(
-              firstBrace,
-              lastBrace + 1
+              start,
+              end + 1
             );
 
 
           try {
 
             result =
-              JSON.parse(
-                possibleJson
-              );
+              JSON.parse(extracted);
 
           } catch (secondError) {
 
             result =
               null;
           }
+
+        } else {
+
+          result =
+            null;
         }
       }
 
@@ -298,112 +271,114 @@ Return ONLY the JSON object.
 
       if (
         !result ||
-        typeof result !== "object" ||
-        Array.isArray(result)
+        typeof result !== "object"
       ) {
 
-        result = {
+        return new Response(
+          JSON.stringify({
 
-          language:
-            "Unknown",
+            language:
+              "Unknown",
 
-          cause:
-            "The AI returned an unexpected response format.",
+            cause:
+              "The AI returned an unexpected response.",
 
-          evidence:
-            aiText ||
-            "No response was received from the AI.",
+            evidence:
+              aiText ||
+              "The AI returned no text.",
 
-          solution:
-            "Please run the investigation again.",
+            solution:
+              "Please try the investigation again.",
 
-          confidence:
-            50,
+            confidence:
+              50,
 
-          tip:
-            "The AI responded, but its response was not valid JSON."
-        };
+            tip:
+              "The AI responded, but its response could not be converted into the debugger format."
+
+          }),
+          {
+            status: 200,
+
+            headers: {
+              ...corsHeaders,
+              "Content-Type":
+                "application/json"
+            }
+          }
+        );
       }
 
 
       // ========================================
-      // MAKE SURE ALL FIELDS EXIST
+      // NORMALIZE RESULT
       // ========================================
 
-      result.language =
-        result.language ||
-        "Unknown";
+      const finalResult = {
 
+        language:
+          String(
+            result.language ||
+            "Unknown"
+          ),
 
-      result.cause =
-        result.cause ||
-        "No cause provided.";
+        cause:
+          String(
+            result.cause ||
+            "No cause provided."
+          ),
 
+        evidence:
+          String(
+            result.evidence ||
+            "No evidence provided."
+          ),
 
-      result.evidence =
-        result.evidence ||
-        "No evidence provided.";
+        solution:
+          String(
+            result.solution ||
+            "No solution provided."
+          ),
 
+        confidence:
+          Math.max(
+            0,
+            Math.min(
+              100,
+              Number(
+                result.confidence
+              ) || 0
+            )
+          ),
 
-      result.solution =
-        result.solution ||
-        "No solution provided.";
-
-
-      result.confidence =
-        Number(
-          result.confidence
-        ) || 0;
-
-
-      result.tip =
-        result.tip ||
-        "Review the suggested fix carefully.";
-
-
-      // Keep confidence between 0 and 100
-
-      result.confidence =
-        Math.max(
-          0,
-          Math.min(
-            100,
-            result.confidence
+        tip:
+          String(
+            result.tip ||
+            "Review the suggested fix carefully."
           )
-        );
+      };
 
 
       // ========================================
-      // SEND RESULT TO WEBSITE
+      // RETURN RESULT
       // ========================================
 
       return new Response(
-        JSON.stringify(result),
+        JSON.stringify(finalResult),
         {
           status: 200,
 
           headers: {
+            ...corsHeaders,
+
             "Content-Type":
-              "application/json",
-
-            "Access-Control-Allow-Origin":
-              "*",
-
-            "Access-Control-Allow-Methods":
-              "POST, OPTIONS",
-
-            "Access-Control-Allow-Headers":
-              "Content-Type"
+              "application/json"
           }
         }
       );
 
 
     } catch (error) {
-
-      // ========================================
-      // ERROR HANDLING
-      // ========================================
 
       console.error(
         "Worker error:",
@@ -415,23 +390,16 @@ Return ONLY the JSON object.
         JSON.stringify({
           error:
             error.message ||
-            "Unknown server error."
+            "Unknown Worker error."
         }),
         {
           status: 500,
 
           headers: {
+            ...corsHeaders,
+
             "Content-Type":
-              "application/json",
-
-            "Access-Control-Allow-Origin":
-              "*",
-
-            "Access-Control-Allow-Methods":
-              "POST, OPTIONS",
-
-            "Access-Control-Allow-Headers":
-              "Content-Type"
+              "application/json"
           }
         }
       );
